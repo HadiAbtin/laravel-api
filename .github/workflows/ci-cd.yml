@@ -101,6 +101,9 @@ jobs:
         # Get the latest image tag from the build step
         LATEST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
         
+        # Pull the image first to make it available locally
+        docker pull "$LATEST_TAG"
+        
         # Tag and push based on branch using docker tag and push
         if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
           docker tag "$LATEST_TAG" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop"
