@@ -1,5 +1,59 @@
 # Laravel API Multi-Environment CI/CD Guide
 
+## Prerequisites
+
+### Required Setup Before CI/CD
+
+#### **🔐 Secrets Manager Setup (REQUIRED)**
+Before running any CI/CD pipeline, ensure secrets are created in AWS Secrets Manager:
+
+**Development Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-db-password-new" \
+  --secret-string "DevDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-app-key-new" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**Staging Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-db-password" \
+  --secret-string "StagingDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**Production Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-db-password" \
+  --secret-string "ProdDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+#### **🐳 ECR Repository Setup (REQUIRED)**
+Ensure ECR repository exists before CI/CD runs:
+
+```bash
+# Create ECR repository (if not exists)
+aws ecr create-repository --repository-name laravel-api --region us-east-1
+```
+
 ## Overview
 This project implements a comprehensive CI/CD pipeline for Laravel API with three environments: **Development**, **Staging**, and **Production**.
 
@@ -54,6 +108,42 @@ Feature Branch → Pull Request → develop → staging → main
 ### 4. Health Check Stage
 - **Environment Validation**: Post-deployment checks
 - **Service Status**: ECS service health verification
+
+## Image Tag Management
+
+### **🔄 Flexible Image Tag Strategy**
+
+**Automatic Deployments (CI/CD):**
+- All automatic deployments use `latest` tag
+- Images are tagged with `latest` during CI/CD build process
+- Each environment gets the same `latest` image
+
+**Manual Deployments:**
+- Support for any custom image tag
+- Deploy specific versions to any environment
+- Mix and match image tags across environments
+
+**Example Scenarios:**
+```bash
+# Deploy latest development build to staging
+./deploy.sh staging apply latest
+
+# Deploy specific version to production
+./deploy.sh prod apply v1.2.3
+
+# Deploy feature branch to development
+./deploy.sh dev apply feature-auth-improvements
+
+# Deploy hotfix to production
+./deploy.sh prod apply hotfix-security-patch
+```
+
+**Image Tag Best Practices:**
+- **Development**: Use `latest` for continuous integration
+- **Staging**: Use version tags like `v1.2.3` for testing
+- **Production**: Use stable version tags for releases
+- **Feature Branches**: Use descriptive tags like `feature-auth-improvements`
+- **Hotfixes**: Use `hotfix-` prefix for emergency fixes
 
 ## Manual Deployment
 

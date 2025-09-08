@@ -7,6 +7,62 @@
 - Terraform installed
 - Docker installed (for building images)
 
+### **🔐 REQUIRED: Create Secrets First**
+Before deploying any environment, you **MUST** create secrets in AWS Secrets Manager:
+
+**Development Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-db-password-new" \
+  --secret-string "DevDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-app-key-new" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**Staging Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-db-password" \
+  --secret-string "StagingDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**Production Environment:**
+```bash
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-db-password" \
+  --secret-string "ProdDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+### **🐳 REQUIRED: Build and Push Docker Image**
+Before deploying infrastructure, build and push your Docker image:
+
+```bash
+# Navigate to Laravel project
+cd ../laravel-api
+
+# Build and push with specific tag
+./build-and-push.sh v1.2.3
+
+# Or use default latest tag
+./build-and-push.sh
+```
+
 ### **Deploy All Environments:**
 ```bash
 # Development (with latest image)

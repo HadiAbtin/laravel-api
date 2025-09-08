@@ -4,6 +4,112 @@
 
 This guide outlines the best approach for deploying a Laravel API project to AWS using modern DevOps practices including Infrastructure as Code (Terraform), containerization, and CI/CD pipelines.
 
+## 🚀 **Prerequisites**
+
+### **1. AWS Account Setup**
+- AWS Account with appropriate permissions
+- AWS CLI configured
+- Terraform installed (>= 1.0)
+
+### **2. Required AWS Services**
+- **ECS Fargate**: Container orchestration
+- **RDS**: Managed MySQL database
+- **ElastiCache**: Managed Redis cache
+- **ALB**: Application Load Balancer
+- **ECR**: Container registry (managed externally)
+- **VPC**: Virtual Private Cloud
+- **CloudWatch**: Monitoring and logging
+- **Secrets Manager**: Secure credential storage (managed externally)
+- **Auto Scaling**: Automatic scaling based on metrics
+- **VPC Endpoints**: Private access to AWS services
+- **CloudFront**: Content Delivery Network
+- **Route 53**: DNS management (optional)
+- **ACM**: SSL certificate management
+
+### **3. Development Environment**
+- Docker installed
+- Git configured
+- PHP 8.4+ (for local development)
+- Composer (for dependency management)
+
+### **4. Pre-Deployment Requirements**
+
+#### **🔐 Secrets Manager Setup (REQUIRED)**
+Before deploying any environment, you **MUST** create the required secrets in AWS Secrets Manager:
+
+**For Development Environment:**
+```bash
+# Database password
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-db-password-new" \
+  --description "Database password for Laravel API development environment" \
+  --secret-string "DevDBPass123" \
+  --region us-east-1
+
+# Application key
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-app-key-new" \
+  --description "Laravel application key for development environment" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**For Staging Environment:**
+```bash
+# Database password
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-db-password" \
+  --description "Database password for Laravel API staging environment" \
+  --secret-string "StagingDBPass123" \
+  --region us-east-1
+
+# Application key
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-app-key" \
+  --description "Laravel application key for staging environment" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+**For Production Environment:**
+```bash
+# Database password
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-db-password" \
+  --description "Database password for Laravel API production environment" \
+  --secret-string "ProdDBPass123" \
+  --region us-east-1
+
+# Application key
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-app-key" \
+  --description "Laravel application key for production environment" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+#### **🐳 Docker Image Preparation (REQUIRED)**
+Before deploying infrastructure, you **MUST** build and push your Docker image to ECR:
+
+```bash
+# Navigate to Laravel project directory
+cd laravel-api
+
+# Build and push with latest tag (default)
+./build-and-push.sh
+
+# Or build and push with specific tag
+./build-and-push.sh v1.2.3
+./build-and-push.sh dev-feature-123
+./build-and-push.sh staging-456
+```
+
+**Important Notes:**
+- Each environment can use different image tags
+- You can deploy any image tag to any environment
+- Default tag is `latest` if not specified
+- Image must exist in ECR before deployment
+
 ## 🎯 **Recommended Architecture**
 
 ### **1. Infrastructure as Code (Terraform)**
@@ -97,6 +203,70 @@ GitHub Actions → ECR (External) → ECS Fargate → ALB
 # - Custom application metrics
 # - Error tracking
 # - Performance monitoring
+```
+
+## 🚀 **Deployment Process**
+
+### **Step 1: Prepare Secrets (REQUIRED)**
+```bash
+# Create secrets for each environment before deployment
+# See Prerequisites section for detailed commands
+```
+
+### **Step 2: Build and Push Docker Image (REQUIRED)**
+```bash
+# Navigate to Laravel project
+cd laravel-api
+
+# Build and push image with specific tag
+./build-and-push.sh v1.2.3
+
+# Or use default latest tag
+./build-and-push.sh
+```
+
+### **Step 3: Deploy Infrastructure**
+```bash
+# Navigate to Terraform project
+cd terraform-aws-laravel
+
+# Deploy development environment with specific image tag
+./deploy.sh dev apply v1.2.3
+
+# Deploy staging environment
+./deploy.sh staging apply latest
+
+# Deploy production environment
+./deploy.sh prod apply v1.2.3
+```
+
+### **Step 4: Verify Deployment**
+```bash
+# Check ECS service status
+aws ecs describe-services --cluster laravel-api-dev-cluster --services laravel-api-dev-service
+
+# Test API endpoints
+curl https://your-cloudfront-domain/api/ping
+curl https://your-cloudfront-domain/api/users
+```
+
+### **🔄 Image Tag Management**
+
+**Flexible Deployment Strategy:**
+- **Development**: Always use `latest` tag for continuous integration
+- **Staging**: Use version tags like `v1.2.3` for testing
+- **Production**: Use stable version tags like `v1.2.3` for releases
+
+**Example Deployment Scenarios:**
+```bash
+# Deploy latest development build to staging
+./deploy.sh staging apply latest
+
+# Deploy specific version to production
+./deploy.sh prod apply v1.2.3
+
+# Deploy feature branch to development
+./deploy.sh dev apply feature-auth-improvements
 ```
 
 ## 🎯 **Benefits of This Approach**
