@@ -13,6 +13,7 @@ Route::get('test/version', 'Api\TestController@version');
 Route::group(['prefix' => 'users'], function () {
     Route::get('/', 'Api\UserController@index');
     Route::get('/stats', 'Api\UserController@stats');
+    Route::get('/env-info', 'Api\UserController@envInfo');
     Route::get('/{uuid}', 'Api\UserController@show');
     Route::post('/', 'Api\UserController@store');
     Route::put('/{uuid}', 'Api\UserController@update');
