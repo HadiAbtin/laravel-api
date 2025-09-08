@@ -165,6 +165,22 @@ class UserController extends Controller
      */
     public function envInfo(): JsonResponse
     {
+        // Check Redis connection safely
+        $redisConnected = false;
+        try {
+            $redisConnected = Redis::ping() === '+PONG';
+        } catch (\Exception $e) {
+            $redisConnected = false;
+        }
+
+        // Check database connection safely
+        $databaseConnected = false;
+        try {
+            $databaseConnected = DB::connection()->getPdo() ? true : false;
+        } catch (\Exception $e) {
+            $databaseConnected = false;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Environment info retrieved successfully',
@@ -172,8 +188,8 @@ class UserController extends Controller
                 'environment' => app()->environment(),
                 'app_name' => config('app.name'),
                 'app_url' => config('app.url'),
-                'database_connected' => DB::connection()->getPdo() ? true : false,
-                'redis_connected' => Redis::ping() === '+PONG',
+                'database_connected' => $databaseConnected,
+                'redis_connected' => $redisConnected,
                 'cache_driver' => config('cache.default'),
                 'queue_driver' => config('queue.default'),
                 'session_driver' => config('session.driver'),
