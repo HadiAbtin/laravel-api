@@ -85,8 +85,6 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=develop,enable={{github.ref == 'refs/heads/develop'}}
-          type=raw,value=staging,enable={{github.ref == 'refs/heads/staging'}}
 
     - name: Build and push Docker image
       id: build
@@ -97,8 +95,21 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+
+    - name: Tag and push environment-specific images
+      run: |
+        # Get the image digest from the build step
+        IMAGE_DIGEST=$(echo "${{ steps.build.outputs.digest }}" | cut -d':' -f2)
+        IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}@${IMAGE_DIGEST}"
+        
+        # Tag and push based on branch
+        if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag develop
+        elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag staging
+        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag latest
+        fi
 
   # Deploy to Development
   deploy-dev:
