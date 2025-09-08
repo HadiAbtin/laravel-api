@@ -9,6 +9,11 @@ Route::get('test', 'Api\TestController@index');
 Route::get('test/health', 'Api\TestController@health');
 Route::get('test/version', 'Api\TestController@version');
 
+// Workflow test routes
+Route::get('workflow/test', 'Api\WorkflowTestController@test');
+Route::get('workflow/status', 'Api\WorkflowTestController@status');
+Route::get('workflow/deployment', 'Api\WorkflowTestController@deployment');
+
 // Web test routes for comprehensive testing
 Route::get('web-test/dashboard', 'Api\WebTestController@dashboard');
 Route::get('web-test/database', 'Api\WebTestController@databaseTest');
