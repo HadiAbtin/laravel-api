@@ -9,6 +9,15 @@ Route::get('test', 'Api\TestController@index');
 Route::get('test/health', 'Api\TestController@health');
 Route::get('test/version', 'Api\TestController@version');
 
+// Web test routes for comprehensive testing
+Route::get('web-test/dashboard', 'Api\WebTestController@dashboard');
+Route::get('web-test/database', 'Api\WebTestController@databaseTest');
+Route::get('web-test/redis', 'Api\WebTestController@redisTest');
+Route::get('web-test/cache', 'Api\WebTestController@cacheTest');
+Route::get('web-test/performance', 'Api\WebTestController@performanceTest');
+Route::get('web-test/log', 'Api\WebTestController@logTest');
+Route::get('web-test/environment', 'Api\WebTestController@environmentTest');
+
 Route::get('assets/{uuid}/render', 'Api\Assets\RenderFileController@show');
 
 // Performance Test Routes (Public for testing)
