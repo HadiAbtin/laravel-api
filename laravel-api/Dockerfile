@@ -40,12 +40,27 @@ RUN echo '#!/bin/bash\n\
 echo "Waiting for database..."\n\
 sleep 10\n\
 \n\
+# Always generate OAuth keys (force regeneration)\n\
+echo "Generating OAuth keys..."\n\
+cd /var/www/html\n\
+php artisan passport:keys --force\n\
+echo "OAuth keys generated successfully"\n\
+\n\
+# Verify OAuth keys exist\n\
+if [ -f storage/oauth-private.key ] && [ -f storage/oauth-public.key ]; then\n\
+    echo "OAuth keys verified successfully"\n\
+    ls -la storage/oauth-*.key\n\
+else\n\
+    echo "ERROR: OAuth keys not found!"\n\
+    exit 1\n\
+fi\n\
+\n\
 # Generate API documentation with correct URL\n\
 echo "Generating API documentation..."\n\
 if [ ! -z "$APP_DOC_URL" ]; then\n\
     echo "Using APP_DOC_URL: $APP_DOC_URL"\n\
     # Replace the placeholder in apiblueprint.apib\n\
-    sed -i.bak "s/{{APP_DOC_URL}}/$APP_DOC_URL/g" docs/api/apiblueprint.apib\n\
+    sed -i.bak "s|{{APP_DOC_URL}}|$APP_DOC_URL|g" docs/api/apiblueprint.apib\n\
     # Generate the documentation\n\
     apibmerge docs/api/blueprint docs/api/apiblueprint.apib\n\
     aglio --theme-variables flatly --theme-template triple -i docs/api/blueprint/apidocs.apib -o resources/views/apidocs.blade.php\n\
