@@ -32,12 +32,12 @@ output "cloudfront_hosted_zone_id" {
 
 output "ecr_repository_url" {
   description = "ECR repository URL"
-  value       = module.ecr.repository_url
+  value       = local.ecr_repository_url
 }
 
 output "ecr_repository_name" {
   description = "ECR repository name"
-  value       = module.ecr.repository_name
+  value       = var.project_name
 }
 
 output "ecs_cluster_name" {
@@ -168,6 +168,6 @@ output "deployment_summary" {
     vpc_id          = module.vpc.vpc_id
     rds_endpoint    = module.rds.endpoint
     redis_endpoint  = module.redis.endpoint
-    ecr_repository  = module.ecr.repository_url
+    ecr_repository  = local.ecr_repository_url
   }
 }
