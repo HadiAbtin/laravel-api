@@ -102,11 +102,11 @@ resource "aws_ecs_task_definition" "main" {
       secrets = [
         {
           name      = "DB_PASSWORD"
-          valueFrom = aws_secretsmanager_secret.db_password.arn
+          valueFrom = data.aws_secretsmanager_secret.db_password.arn
         },
         {
           name      = "APP_KEY"
-          valueFrom = aws_secretsmanager_secret.app_key.arn
+          valueFrom = data.aws_secretsmanager_secret.app_key.arn
         }
       ]
 
@@ -269,8 +269,8 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          aws_secretsmanager_secret.db_password.arn,
-          aws_secretsmanager_secret.app_key.arn
+          data.aws_secretsmanager_secret.db_password.arn,
+          data.aws_secretsmanager_secret.app_key.arn
         ]
       }
     ]
@@ -315,64 +315,30 @@ resource "aws_iam_role_policy" "ecs_task_secrets" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          aws_secretsmanager_secret.db_password.arn,
-          aws_secretsmanager_secret.app_key.arn
+          data.aws_secretsmanager_secret.db_password.arn,
+          data.aws_secretsmanager_secret.app_key.arn
         ]
       }
     ]
   })
 }
 
-# Random Password Generator for DB
-resource "random_password" "db_password" {
-  length  = 16
-  special = false
-  upper   = true
-  lower   = true
-  numeric = true
+# Data source for existing Secrets Manager secrets
+data "aws_secretsmanager_secret" "db_password" {
+  name = "${var.project_name}-${var.environment}-db-password"
 }
 
-# Random Password Generator for App Key
-resource "random_password" "app_key" {
-  length  = 32
-  special = false
-  upper   = true
-  lower   = true
-  numeric = true
+data "aws_secretsmanager_secret" "app_key" {
+  name = "${var.project_name}-${var.environment}-app-key"
 }
 
-  # Secrets Manager Secret for DB Password
-  resource "aws_secretsmanager_secret" "db_password" {
-    name = "${var.project_name}-${var.environment}-db-password-v2"
-
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-db-password"
-    Project     = var.project_name
-    Environment = var.environment
-  }
+# Data source for secret values
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = data.aws_secretsmanager_secret.db_password.id
 }
 
-# Secrets Manager Secret Value for DB Password
-resource "aws_secretsmanager_secret_version" "db_password" {
-  secret_id     = aws_secretsmanager_secret.db_password.id
-  secret_string = random_password.db_password.result
-}
-
-  # Secrets Manager Secret for App Key
-  resource "aws_secretsmanager_secret" "app_key" {
-    name = "${var.project_name}-${var.environment}-app-key-v2"
-
-  tags = {
-    Name        = "${var.project_name}-${var.environment}-app-key"
-    Project     = var.project_name
-    Environment = var.environment
-  }
-}
-
-# Secrets Manager Secret Value for App Key
-resource "aws_secretsmanager_secret_version" "app_key" {
-  secret_id     = aws_secretsmanager_secret.app_key.id
-  secret_string = "base64:${base64encode(random_password.app_key.result)}"
+data "aws_secretsmanager_secret_version" "app_key" {
+  secret_id = data.aws_secretsmanager_secret.app_key.id
 }
 
 # CloudWatch Log Group for ECS

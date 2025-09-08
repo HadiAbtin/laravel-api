@@ -12,10 +12,13 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# Random password for RDS
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
+# Data source for existing Secrets Manager secret
+data "aws_secretsmanager_secret" "db_password" {
+  name = "${var.project_name}-${var.environment}-db-password"
+}
+
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = data.aws_secretsmanager_secret.db_password.id
 }
 
 # RDS Instance
@@ -36,7 +39,7 @@ resource "aws_db_instance" "main" {
   # Database
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password != "" ? var.db_password : random_password.db_password.result
+  password = data.aws_secretsmanager_secret_version.db_password.secret_string
 
   # Network
   db_subnet_group_name   = aws_db_subnet_group.main.name

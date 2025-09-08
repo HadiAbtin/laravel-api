@@ -22,8 +22,8 @@ output "username" {
 }
 
 output "password" {
-  description = "RDS password"
-  value       = var.db_password != "" ? var.db_password : random_password.db_password.result
+  description = "RDS password from external secret"
+  value       = data.aws_secretsmanager_secret_version.db_password.secret_string
   sensitive   = true
 }
 

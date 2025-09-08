@@ -35,23 +35,23 @@ output "task_role_arn" {
   value       = aws_iam_role.ecs_task_role.arn
 }
 
-# Generated Secrets Outputs
+# External Secrets Outputs
 output "db_password" {
-  description = "Generated database password"
-  value       = random_password.db_password.result
+  description = "Database password from external secret"
+  value       = data.aws_secretsmanager_secret_version.db_password.secret_string
   sensitive   = true
 }
 
 output "app_key" {
-  description = "Generated Laravel application key"
-  value       = "base64:${base64encode(random_password.app_key.result)}"
+  description = "Laravel application key from external secret"
+  value       = data.aws_secretsmanager_secret_version.app_key.secret_string
   sensitive   = true
 }
 
 output "secrets_manager_arns" {
-  description = "ARNs of the generated secrets"
+  description = "ARNs of the external secrets"
   value = {
-    db_password = aws_secretsmanager_secret.db_password.arn
-    app_key     = aws_secretsmanager_secret.app_key.arn
+    db_password = data.aws_secretsmanager_secret.db_password.arn
+    app_key     = data.aws_secretsmanager_secret.app_key.arn
   }
 }
