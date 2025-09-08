@@ -43,6 +43,8 @@ jobs:
       run: |
         cd laravel-api
         cp ../phpunit.xml .
+        cp ../oauth-private.key storage/
+        cp ../oauth-public.key storage/
         composer test
 
     - name: Run static analysis
