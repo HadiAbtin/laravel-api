@@ -129,14 +129,14 @@ output "secrets_manager_arns" {
 }
 
 output "generated_db_password" {
-  description = "Generated database password"
-  value       = module.ecs.generated_db_password
+  description = "Database password from external secret"
+  value       = module.ecs.db_password
   sensitive   = true
 }
 
 output "generated_app_key" {
-  description = "Generated application key"
-  value       = module.ecs.generated_app_key
+  description = "Laravel application key from external secret"
+  value       = module.ecs.app_key
   sensitive   = true
 }
 
