@@ -85,6 +85,8 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=develop,enable={{is_default_branch == false}}
+          type=raw,value=staging,enable={{is_default_branch == false}}
 
     - name: Build and push Docker image
       id: build
@@ -96,25 +98,6 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
-    - name: Tag and push environment-specific images
-      run: |
-        # Get the latest image tag from the build step
-        LATEST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-        
-        # Pull the image first to make it available locally
-        docker pull "$LATEST_TAG"
-        
-        # Tag and push based on branch using docker tag and push
-        if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-          docker tag "$LATEST_TAG" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop"
-          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop"
-        elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
-          docker tag "$LATEST_TAG" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging"
-          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging"
-        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          docker tag "$LATEST_TAG" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
-          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
-        fi
 
   # Deploy to Development
   deploy-dev:
