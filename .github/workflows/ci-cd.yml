@@ -122,10 +122,29 @@ jobs:
 
     - name: Update ECS Service
       run: |
+        # Get the latest task definition
+        TASK_DEFINITION=$(aws ecs describe-task-definition \
+          --task-definition laravel-api-dev \
+          --region ${{ env.AWS_REGION }} \
+          --query 'taskDefinition')
+        
+        # Update the image in task definition
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop-${{ github.sha }}" \
+          '.containerDefinitions[0].image = $IMAGE')
+        
+        # Register new task definition
+        NEW_TASK_DEFINITION_ARN=$(echo $NEW_TASK_DEFINITION | jq -c . | \
+          aws ecs register-task-definition \
+            --cli-input-json file:///dev/stdin \
+            --region ${{ env.AWS_REGION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+        
+        # Update ECS service with new task definition
         aws ecs update-service \
           --cluster laravel-api-dev-cluster \
           --service laravel-api-dev-service \
-          --force-new-deployment \
+          --task-definition $NEW_TASK_DEFINITION_ARN \
           --region ${{ env.AWS_REGION }}
 
   # Deploy to Staging
@@ -152,10 +171,29 @@ jobs:
 
     - name: Update ECS Service
       run: |
+        # Get the latest task definition
+        TASK_DEFINITION=$(aws ecs describe-task-definition \
+          --task-definition laravel-api-staging \
+          --region ${{ env.AWS_REGION }} \
+          --query 'taskDefinition')
+        
+        # Update the image in task definition
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging-${{ github.sha }}" \
+          '.containerDefinitions[0].image = $IMAGE')
+        
+        # Register new task definition
+        NEW_TASK_DEFINITION_ARN=$(echo $NEW_TASK_DEFINITION | jq -c . | \
+          aws ecs register-task-definition \
+            --cli-input-json file:///dev/stdin \
+            --region ${{ env.AWS_REGION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+        
+        # Update ECS service with new task definition
         aws ecs update-service \
           --cluster laravel-api-staging-cluster \
           --service laravel-api-staging-service \
-          --force-new-deployment \
+          --task-definition $NEW_TASK_DEFINITION_ARN \
           --region ${{ env.AWS_REGION }}
 
   # Deploy to Production
@@ -182,10 +220,29 @@ jobs:
 
     - name: Update ECS Service
       run: |
+        # Get the latest task definition
+        TASK_DEFINITION=$(aws ecs describe-task-definition \
+          --task-definition laravel-api-prod \
+          --region ${{ env.AWS_REGION }} \
+          --query 'taskDefinition')
+        
+        # Update the image in task definition
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:main-${{ github.sha }}" \
+          '.containerDefinitions[0].image = $IMAGE')
+        
+        # Register new task definition
+        NEW_TASK_DEFINITION_ARN=$(echo $NEW_TASK_DEFINITION | jq -c . | \
+          aws ecs register-task-definition \
+            --cli-input-json file:///dev/stdin \
+            --region ${{ env.AWS_REGION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+        
+        # Update ECS service with new task definition
         aws ecs update-service \
           --cluster laravel-api-prod-cluster \
           --service laravel-api-prod-service \
-          --force-new-deployment \
+          --task-definition $NEW_TASK_DEFINITION_ARN \
           --region ${{ env.AWS_REGION }}
 
   # Health Check
