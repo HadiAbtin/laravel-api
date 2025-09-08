@@ -230,6 +230,77 @@ aws logs describe-log-streams --log-group-name /ecs/laravel-api-dev
 curl https://<cloudfront-url>/api/ping
 ```
 
+## 🌐 **Custom Domain Setup**
+
+### **Using Cloudflare DNS (Recommended)**
+
+After successful deployment, you can use your own domain:
+
+#### **Step 1: Get ALB URL**
+```bash
+# Get ALB URL from Terraform output
+./deploy.sh dev output | grep alb_url
+
+# Example output:
+# alb_url = "http://laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com"
+```
+
+#### **Step 2: Configure Cloudflare DNS**
+1. **Login to Cloudflare Dashboard**
+2. **Go to DNS Management**
+3. **Create CNAME Records:**
+
+**Development Environment:**
+```
+Type: CNAME
+Name: laravel-api-dev
+Target: laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+**Staging Environment:**
+```
+Type: CNAME
+Name: laravel-api-staging
+Target: laravel-api-staging-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+**Production Environment:**
+```
+Type: CNAME
+Name: laravel-api
+Target: laravel-api-prod-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+#### **Step 3: Access Your Services**
+After DNS propagation (5-10 minutes), your services will be available at:
+
+- **Development**: `https://laravel-api-dev.vboom.io`
+- **Staging**: `https://laravel-api-staging.vboom.io`
+- **Production**: `https://laravel-api.vboom.io`
+
+#### **Step 4: Test Custom Domains**
+```bash
+# Test development environment
+curl -I https://laravel-api-dev.vboom.io/api/ping
+
+# Test staging environment
+curl -I https://laravel-api-staging.vboom.io/api/ping
+
+# Test production environment
+curl -I https://laravel-api.vboom.io/api/ping
+```
+
+### **🔒 Cloudflare Benefits**
+- ✅ **Free SSL/TLS**: Automatic HTTPS encryption
+- ✅ **DDoS Protection**: Built-in security
+- ✅ **CDN**: Global content delivery
+- ✅ **Caching**: Improved performance
+- ✅ **Analytics**: Traffic insights
+- ✅ **Easy Setup**: Simple CNAME configuration
+
 ## 🛠️ **Troubleshooting**
 
 ### **Common Issues:**

@@ -301,6 +301,139 @@ curl https://your-cloudfront-domain/api/users
 - **CloudWatch**: Comprehensive monitoring
 - **Image Tag Management**: Per-environment deployment control
 
+## 🌐 **Custom Domain Setup**
+
+### **Option 1: Cloudflare DNS (Recommended)**
+
+After successful deployment, you can use your own domain with Cloudflare:
+
+#### **Step 1: Get ALB URL**
+```bash
+# Get ALB URL from Terraform output
+cd terraform-aws-laravel
+terraform output alb_url
+
+# Example output:
+# "http://laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com"
+```
+
+#### **Step 2: Configure Cloudflare DNS**
+1. **Login to Cloudflare Dashboard**
+2. **Go to DNS Management**
+3. **Create CNAME Records:**
+
+**Development Environment:**
+```
+Type: CNAME
+Name: laravel-api-dev
+Target: laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+**Staging Environment:**
+```
+Type: CNAME
+Name: laravel-api-staging
+Target: laravel-api-staging-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+**Production Environment:**
+```
+Type: CNAME
+Name: laravel-api
+Target: laravel-api-prod-alb-1234567890.us-east-1.elb.amazonaws.com
+Proxy: ✅ Enabled (Orange Cloud)
+```
+
+#### **Step 3: Access Your Services**
+After DNS propagation (5-10 minutes), your services will be available at:
+
+- **Development**: `https://laravel-api-dev.vboom.io`
+- **Staging**: `https://laravel-api-staging.vboom.io`
+- **Production**: `https://laravel-api.vboom.io`
+
+### **Option 2: CloudFront Custom Domain**
+
+You can also use CloudFront with custom domains:
+
+#### **Step 1: Create ACM Certificate**
+```bash
+# Create SSL certificate for your domain
+aws acm request-certificate \
+  --domain-name "*.vboom.io" \
+  --validation-method DNS \
+  --region us-east-1
+```
+
+#### **Step 2: Configure CloudFront**
+Update Terraform configuration to use custom domain:
+
+```hcl
+# In modules/cloudfront/main.tf
+resource "aws_cloudfront_distribution" "main" {
+  # ... existing configuration ...
+  
+  aliases = ["laravel-api-dev.vboom.io"]
+  
+  viewer_certificate {
+    acm_certificate_arn      = var.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+}
+```
+
+#### **Step 3: Update DNS**
+Point your domain to CloudFront distribution:
+
+```
+Type: CNAME
+Name: laravel-api-dev
+Target: d1234567890.cloudfront.net
+```
+
+### **🔒 SSL/TLS Benefits**
+
+**Cloudflare Proxy Benefits:**
+- ✅ **Free SSL/TLS**: Automatic HTTPS encryption
+- ✅ **DDoS Protection**: Built-in security
+- ✅ **CDN**: Global content delivery
+- ✅ **Caching**: Improved performance
+- ✅ **Analytics**: Traffic insights
+
+**CloudFront Benefits:**
+- ✅ **AWS Integration**: Native AWS service
+- ✅ **Custom SSL**: ACM certificate management
+- ✅ **Edge Locations**: Global AWS infrastructure
+- ✅ **Custom Headers**: Advanced configuration
+
+### **📋 Domain Configuration Examples**
+
+**Complete Domain Setup:**
+```bash
+# Development
+https://laravel-api-dev.vboom.io → Cloudflare → ALB → ECS
+
+# Staging  
+https://laravel-api-staging.vboom.io → Cloudflare → ALB → ECS
+
+# Production
+https://laravel-api.vboom.io → Cloudflare → ALB → ECS
+```
+
+**Testing Your Setup:**
+```bash
+# Test development environment
+curl -I https://laravel-api-dev.vboom.io/api/ping
+
+# Test staging environment
+curl -I https://laravel-api-staging.vboom.io/api/ping
+
+# Test production environment
+curl -I https://laravel-api.vboom.io/api/ping
+```
+
 ## 📁 **Project Structure**
 
 ### **Project 1: Infrastructure (Terraform)**
