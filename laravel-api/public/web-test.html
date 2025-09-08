@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel API Web Test Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .test-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .test-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .test-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            border: 1px solid #e9ecef;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background-color: #28a745;
+        }
+        
+        .status-error {
+            background-color: #dc3545;
+        }
+        
+        .status-loading {
+            background-color: #ffc107;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Laravel API Web Test Dashboard</h1>
+            <p>Comprehensive testing interface for Laravel API endpoints</p>
+        </div>
+        
+        <div class="test-grid">
+            <!-- Dashboard Test -->
+            <div class="test-card">
+                <h3>📊 System Dashboard</h3>
+                <button class="test-button" onclick="runTest('dashboard')">
+                    <span class="status-indicator" id="status-dashboard"></span>
+                    Run Dashboard Test
+                </button>
+                <div class="result-area" id="result-dashboard">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Database Test -->
+            <div class="test-card">
+                <h3>🗄️ Database Test</h3>
+                <button class="test-button" onclick="runTest('database')">
+                    <span class="status-indicator" id="status-database"></span>
+                    Test Database Connection
+                </button>
+                <div class="result-area" id="result-database">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Redis Test -->
+            <div class="test-card">
+                <h3>⚡ Redis Test</h3>
+                <button class="test-button" onclick="runTest('redis')">
+                    <span class="status-indicator" id="status-redis"></span>
+                    Test Redis Connection
+                </button>
+                <div class="result-area" id="result-redis">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Cache Test -->
+            <div class="test-card">
+                <h3>💾 Cache Test</h3>
+                <button class="test-button" onclick="runTest('cache')">
+                    <span class="status-indicator" id="status-cache"></span>
+                    Test Cache Operations
+                </button>
+                <div class="result-area" id="result-cache">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Performance Test -->
+            <div class="test-card">
+                <h3>⚡ Performance Test</h3>
+                <button class="test-button" onclick="runTest('performance')">
+                    <span class="status-indicator" id="status-performance"></span>
+                    Run Performance Test
+                </button>
+                <div class="result-area" id="result-performance">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Log Test -->
+            <div class="test-card">
+                <h3>📝 Log Test</h3>
+                <button class="test-button" onclick="runTest('log')">
+                    <span class="status-indicator" id="status-log"></span>
+                    Test Logging
+                </button>
+                <div class="result-area" id="result-log">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Environment Test -->
+            <div class="test-card">
+                <h3>🌍 Environment Test</h3>
+                <button class="test-button" onclick="runTest('environment')">
+                    <span class="status-indicator" id="status-environment"></span>
+                    Check Environment
+                </button>
+                <div class="result-area" id="result-environment">Click the button to run the test...</div>
+            </div>
+            
+            <!-- Basic Tests -->
+            <div class="test-card">
+                <h3>🔧 Basic Tests</h3>
+                <button class="test-button" onclick="runTest('basic')">
+                    <span class="status-indicator" id="status-basic"></span>
+                    Run Basic Tests
+                </button>
+                <div class="result-area" id="result-basic">Click the button to run the test...</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Laravel API Web Test Dashboard - Built with ❤️</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        
+        function setStatus(testName, status) {
+            const indicator = document.getElementById(`status-${testName}`);
+            indicator.className = `status-indicator status-${status}`;
+        }
+        
+        function setResult(testName, content, isError = false) {
+            const resultArea = document.getElementById(`result-${testName}`);
+            resultArea.textContent = content;
+            resultArea.className = `result-area ${isError ? 'error' : 'success'}`;
+        }
+        
+        function setLoading(testName) {
+            const resultArea = document.getElementById(`result-${testName}`);
+            resultArea.textContent = 'Loading...';
+            resultArea.className = 'result-area loading';
+        }
+        
+        async function runTest(testName) {
+            setStatus(testName, 'loading');
+            setLoading(testName);
+            
+            try {
+                let endpoint;
+                switch(testName) {
+                    case 'dashboard':
+                        endpoint = '/web-test/dashboard';
+                        break;
+                    case 'database':
+                        endpoint = '/web-test/database';
+                        break;
+                    case 'redis':
+                        endpoint = '/web-test/redis';
+                        break;
+                    case 'cache':
+                        endpoint = '/web-test/cache';
+                        break;
+                    case 'performance':
+                        endpoint = '/web-test/performance';
+                        break;
+                    case 'log':
+                        endpoint = '/web-test/log';
+                        break;
+                    case 'environment':
+                        endpoint = '/web-test/environment';
+                        break;
+                    case 'basic':
+                        return await runBasicTests();
+                    default:
+                        throw new Error('Unknown test type');
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    setStatus(testName, 'success');
+                    setResult(testName, JSON.stringify(data, null, 2));
+                } else {
+                    setStatus(testName, 'error');
+                    setResult(testName, `Error: ${data.message || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                setStatus(testName, 'error');
+                setResult(testName, `Network Error: ${error.message}`, true);
+            }
+        }
+        
+        async function runBasicTests() {
+            setStatus('basic', 'loading');
+            setLoading('basic');
+            
+            const tests = [
+                { name: 'Ping', endpoint: '/ping' },
+                { name: 'Test', endpoint: '/test' },
+                { name: 'Health', endpoint: '/test/health' },
+                { name: 'Version', endpoint: '/test/version' }
+            ];
+            
+            const results = [];
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(`${API_BASE}${test.endpoint}`);
+                    const data = await response.json();
+                    results.push(`✅ ${test.name}: ${response.ok ? 'PASS' : 'FAIL'}`);
+                } catch (error) {
+                    results.push(`❌ ${test.name}: ERROR - ${error.message}`);
+                }
+            }
+            
+            setStatus('basic', 'success');
+            setResult('basic', results.join('\n'));
+        }
+        
+        // Auto-run dashboard test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => runTest('dashboard'), 1000);
+        });
+    </script>
+</body>
+</html>
