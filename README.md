@@ -15,6 +15,7 @@ This project provides a complete solution for deploying a Laravel API across mul
 - ✅ **Auto-scaling** ECS Fargate services
 - ✅ **CloudFront** CDN for global performance
 - ✅ **Secrets Management** with AWS Secrets Manager
+- ✅ **Image Tag Management** per environment
 - ✅ **Monitoring** with CloudWatch
 - ✅ **Security** best practices
 
@@ -46,8 +47,7 @@ laravel-api/
 │   │   ├── rds/                    # MySQL database
 │   │   ├── redis/                  # Redis cache
 │   │   ├── alb/                    # Application Load Balancer
-│   │   ├── cloudfront/             # CloudFront CDN
-│   │   └── ecr/                    # Elastic Container Registry
+│   │   └── cloudfront/             # CloudFront CDN
 │   ├── docs/                       # Infrastructure documentation
 │   ├── deploy.sh                   # Deployment script
 │   └── README.md                   # Infrastructure guide
@@ -66,6 +66,7 @@ laravel-api/
 - **Application Load Balancer**: Traffic distribution
 - **CloudFront**: Global CDN
 - **VPC**: Isolated network environment
+- **ECR**: Container registry (managed externally)
 - **Secrets Manager**: Secure credential storage
 - **CloudWatch**: Monitoring and logging
 
@@ -95,12 +96,21 @@ cd laravel-api
 ```bash
 cd terraform-aws-laravel
 ./deploy.sh dev apply
+
+# Or with specific image tag
+./deploy.sh dev apply v1.2.3
 ```
 
 ### **3. Build and Push Docker Image:**
 ```bash
 cd ../laravel-api
+
+# Build with latest tag (default)
 ./build-and-push.sh
+
+# Build with specific tag
+./build-and-push.sh v1.2.3
+./build-and-push.sh dev-feature-123
 ```
 
 ### **4. Test API:**
@@ -133,43 +143,48 @@ curl https://<cloudfront-url>/api/ping
 - **Purpose**: Feature development and testing
 - **Resources**: Minimal (t3.micro instances)
 - **Auto-scaling**: 1-3 tasks
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
-- **Deployment**: `./deploy.sh dev apply`
+- **Deployment**: `./deploy.sh dev apply [tag]`
 
 ### **Staging Environment:**
 - **Purpose**: Pre-production testing
 - **Resources**: Same as production
 - **Auto-scaling**: 1-3 tasks
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
-- **Deployment**: `./deploy.sh staging apply`
+- **Deployment**: `./deploy.sh staging apply [tag]`
 
 ### **Production Environment:**
 - **Purpose**: Live application
 - **Resources**: Production-grade
 - **Auto-scaling**: 1-10 tasks
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
-- **Deployment**: `./deploy.sh prod apply`
+- **Deployment**: `./deploy.sh prod apply [tag]`
 
 ## 🔄 **CI/CD Pipeline**
 
 ### **GitHub Actions Workflow:**
 - **Build & Test**: PHP tests and static analysis
 - **Docker Build**: Multi-platform image building
-- **Deploy**: Automated deployment based on branch
+- **ECR Push**: Tagged images to external repository
+- **ECS Update**: Automated service updates
 - **Health Checks**: Post-deployment validation
 
 ### **Branch Strategy:**
 ```
-Feature Branch → Pull Request → develop → Deploy to Dev
+Feature Branch → Pull Request → develop → Deploy to Dev (latest)
      ↓              ↓              ↓
    Tests        Code Review    Auto Deploy
    Build        Approval       ECS Update
 ```
 
 ### **Deployment Triggers:**
-- **`develop`** branch → Development environment
-- **`staging`** branch → Staging environment
-- **`main`** branch → Production environment
+- **`develop`** branch → Development environment (latest tag)
+- **`staging`** branch → Staging environment (latest tag)
+- **`main`** branch → Production environment (latest tag)
+- **Manual**: Support for custom image tags
 
 ## 🛠️ **Development Workflow**
 
@@ -197,8 +212,20 @@ git push origin feature/new-feature
 - Merge to `develop` branch
 
 ### **4. Deployment:**
-- Automatic deployment to development
-- Manual promotion to staging/production
+```bash
+# Build and push image with specific tag
+./build-and-push.sh v1.2.3
+
+# Deploy to development with specific tag
+cd ../terraform-aws-laravel
+./deploy.sh dev apply v1.2.3
+
+# Deploy to staging
+./deploy.sh staging apply v1.2.3
+
+# Deploy to production
+./deploy.sh prod apply v1.2.3
+```
 
 ## 🔐 **Security Features**
 

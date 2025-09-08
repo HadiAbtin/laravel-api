@@ -32,15 +32,17 @@ print_error() {
 }
 
 # Check if environment and action are provided
-if [ $# -ne 2 ]; then
-    print_error "Usage: $0 <environment> <action>"
+if [ $# -lt 2 ]; then
+    print_error "Usage: $0 <environment> <action> [image_tag]"
     print_error "Environments: dev, staging, prod"
     print_error "Actions: apply, destroy, plan, output"
+    print_error "Image Tag: latest (default), or specific tag like v1.0.0"
     exit 1
 fi
 
 ENVIRONMENT=$1
 ACTION=$2
+IMAGE_TAG=${3:-"latest"}
 
 # Validate environment
 if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then
@@ -93,8 +95,8 @@ case $ACTION in
         read -p "Are you sure? (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            print_status "Applying Terraform configuration..."
-            terraform apply -auto-approve
+            print_status "Applying Terraform configuration with image tag: $IMAGE_TAG"
+            terraform apply -auto-approve -var="image_tag=$IMAGE_TAG"
             print_success "Deployment completed successfully!"
             
             # Show outputs

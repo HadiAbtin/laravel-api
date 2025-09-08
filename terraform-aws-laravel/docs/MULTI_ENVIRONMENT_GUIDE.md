@@ -27,7 +27,6 @@ terraform-aws-laravel/
 │   ├── vpc/
 │   ├── rds/
 │   ├── redis/
-│   ├── ecr/
 │   ├── alb/
 │   ├── ecs/
 │   └── cloudfront/
@@ -45,6 +44,7 @@ terraform-aws-laravel/
 - **Resources**: Minimal (t3.micro instances)
 - **Auto Scaling**: 1-3 tasks
 - **Custom Domain**: None (uses CloudFront default URL)
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
 
 ### **Staging Environment:**
@@ -52,6 +52,7 @@ terraform-aws-laravel/
 - **Resources**: Same as production (t3.micro instances)
 - **Auto Scaling**: 1-3 tasks
 - **Custom Domain**: Optional
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
 
 ### **Production Environment:**
@@ -59,6 +60,7 @@ terraform-aws-laravel/
 - **Resources**: Production-grade (t3.micro instances)
 - **Auto Scaling**: 1-10 tasks
 - **Custom Domain**: Required for SSL
+- **Image Tag**: `latest` (configurable)
 - **Cost**: ~$25/week
 
 ## 🚀 **Deployment Methods:**
@@ -74,14 +76,19 @@ The project includes a comprehensive deployment script (`deploy.sh`) that provid
 
 #### **Usage:**
 ```bash
-# Deploy to Development
+# Deploy to Development (with latest image)
 ./deploy.sh dev apply
 
-# Deploy to Staging
+# Deploy to Staging (with latest image)
 ./deploy.sh staging apply
 
-# Deploy to Production
+# Deploy to Production (with latest image)
 ./deploy.sh prod apply
+
+# Deploy with specific image tag
+./deploy.sh dev apply v1.2.3
+./deploy.sh staging apply v2.0.0
+./deploy.sh prod apply v2.1.0
 
 # Plan changes without applying
 ./deploy.sh dev plan
@@ -96,6 +103,7 @@ The project includes a comprehensive deployment script (`deploy.sh`) that provid
 #### **Deployment Script Features:**
 - **Environment Validation**: Ensures valid environment names
 - **Action Validation**: Validates deployment actions
+- **Image Tag Support**: Optional image tag parameter
 - **Safety Prompts**: Confirms destructive operations
 - **Colored Output**: Green for success, red for errors, yellow for warnings
 - **Error Handling**: Graceful error handling and exit codes

@@ -9,21 +9,26 @@
 
 ### **Deploy All Environments:**
 ```bash
-# Development
+# Development (with latest image)
 ./deploy.sh dev apply
 
-# Staging
+# Staging (with latest image)
 ./deploy.sh staging apply
 
-# Production
+# Production (with latest image)
 ./deploy.sh prod apply
+
+# Deploy with specific image tag
+./deploy.sh dev apply v1.2.3
+./deploy.sh staging apply v2.0.0
+./deploy.sh prod apply v2.1.0
 ```
 
 ## 📋 **Deployment Script Usage**
 
 ### **Available Commands:**
 ```bash
-./deploy.sh <environment> <action>
+./deploy.sh <environment> <action> [image_tag]
 ```
 
 ### **Environments:**
@@ -37,20 +42,69 @@
 - `destroy` - Remove all infrastructure
 - `output` - Show deployment outputs
 
+### **Image Tags:**
+- `latest` - Default tag (latest image)
+- `v1.2.3` - Specific version tag
+- `dev-123` - Development build tag
+- `staging-456` - Staging build tag
+
 ### **Examples:**
 ```bash
-# Deploy to development
+# Deploy to development with latest image
 ./deploy.sh dev apply
 
-# Preview staging changes
-./deploy.sh staging plan
+# Deploy to staging with specific version
+./deploy.sh staging apply v1.2.3
 
-# View production outputs
-./deploy.sh prod output
+# Preview production changes
+./deploy.sh prod plan
+
+# View development outputs
+./deploy.sh dev output
+
+# Deploy with custom tag
+./deploy.sh dev apply dev-feature-123
 
 # Destroy development environment
 ./deploy.sh dev destroy
 ```
+
+## 🐳 **ECR Repository Management**
+
+### **Important Note:**
+The ECR repository is **managed externally** from Terraform for better separation of concerns. This allows:
+- Independent image management
+- Flexible deployment strategies
+- No Terraform state conflicts
+- Better CI/CD integration
+
+### **ECR Repository Details:**
+```bash
+# Repository URL format
+<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/laravel-api
+
+# Example
+897722705454.dkr.ecr.us-east-1.amazonaws.com/laravel-api
+```
+
+### **Image Management Commands:**
+```bash
+# List all images
+aws ecr list-images --repository-name laravel-api --region us-east-1
+
+# Describe specific image
+aws ecr describe-images --repository-name laravel-api --image-ids imageTag=latest
+
+# Delete old images (optional)
+aws ecr batch-delete-image --repository-name laravel-api --image-ids imageDigest=<digest>
+```
+
+### **Image Tag Strategy:**
+- **`latest`**: Default tag for all environments
+- **`v1.2.3`**: Semantic versioning for releases
+- **`dev-123`**: Development build tags
+- **`staging-456`**: Staging build tags
+- **`prod-789`**: Production build tags
 
 ## 🔧 **Manual Deployment**
 

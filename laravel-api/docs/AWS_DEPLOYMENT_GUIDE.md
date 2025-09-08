@@ -36,16 +36,20 @@ This guide outlines the best approach for deploying a Laravel API project to AWS
 
 ### **3. CI/CD Pipeline**
 ```
-GitHub Actions → ECR → ECS Fargate → ALB
+GitHub Actions → ECR (External) → ECS Fargate → ALB
 ```
+
+**Note**: ECR repository is managed outside Terraform for better separation of concerns.
 
 ## 🏆 **Best Practice Approach**
 
 ### **✅ Recommended Solution:**
 1. **Separate Terraform project** for Infrastructure management
 2. **Dockerfile in Laravel project** for Containerization
-3. **GitHub Actions** for CI/CD automation
-4. **AWS Fargate + ALB** for scalable hosting
+3. **ECR repository** managed outside Terraform
+4. **GitHub Actions** for CI/CD automation
+5. **AWS Fargate + ALB** for scalable hosting
+6. **Image tag management** per environment
 
 ## 📋 **Implementation Steps**
 
@@ -123,8 +127,9 @@ GitHub Actions → ECR → ECS Fargate → ALB
 - **ALB**: Load balancing + SSL termination
 - **RDS**: Managed database with backups
 - **ElastiCache**: Managed Redis for caching
-- **ECR**: Container registry for images
+- **ECR**: Container registry (managed externally)
 - **CloudWatch**: Comprehensive monitoring
+- **Image Tag Management**: Per-environment deployment control
 
 ## 📁 **Project Structure**
 
@@ -209,12 +214,19 @@ laravel-api/
 
 ### **Phase 3: CI/CD Pipeline**
 1. Set up GitHub Actions workflows
-2. Create ECR repository
-3. Implement automated deployment
+2. Create ECR repository (external management)
+3. Implement automated deployment with image tags
 4. Add environment-specific configurations
 5. Test deployment pipeline
 
-### **Phase 4: Monitoring & Security**
+### **Phase 4: Image Tag Management**
+1. Configure per-environment image tags
+2. Implement deployment scripts with tag support
+3. Set up CI/CD with dynamic tag assignment
+4. Test multi-environment deployments
+5. Document tag management process
+
+### **Phase 5: Monitoring & Security**
 1. Configure CloudWatch logging
 2. Implement application monitoring
 3. Set up security scanning

@@ -21,9 +21,10 @@ Feature Branch → Pull Request → develop → staging → main
 ## Infrastructure Architecture
 
 ### Shared Resources
-- **ECR Repository**: Single repository for all environments
+- **ECR Repository**: Single repository managed externally
 - **Docker Images**: Tagged by environment and version
 - **Terraform Modules**: Reusable across environments
+- **Image Tag Management**: Per-environment deployment control
 
 ### Environment-Specific Resources
 - **VPC**: Isolated per environment
@@ -45,9 +46,10 @@ Feature Branch → Pull Request → develop → staging → main
 - **Cache Optimization**: Build cache for faster builds
 
 ### 3. Deployment Stages
-- **Development**: Auto-deploy on `develop` branch push
-- **Staging**: Auto-deploy on `staging` branch push
-- **Production**: Auto-deploy on `main` branch push
+- **Development**: Auto-deploy on `develop` branch push (latest tag)
+- **Staging**: Auto-deploy on `staging` branch push (latest tag)
+- **Production**: Auto-deploy on `main` branch push (latest tag)
+- **Manual Deployment**: Support for custom image tags
 
 ### 4. Health Check Stage
 - **Environment Validation**: Post-deployment checks
@@ -86,6 +88,49 @@ terraform apply
 cd terraform-aws-laravel/environments/prod
 terraform init
 terraform apply
+```
+
+## Manual Deployment Commands
+
+### Infrastructure Deployment
+```bash
+# Deploy infrastructure for specific environment
+cd terraform-aws-laravel
+./deploy.sh dev apply
+./deploy.sh staging apply
+./deploy.sh prod apply
+
+# Deploy with specific image tag
+./deploy.sh dev apply v1.2.3
+./deploy.sh staging apply latest
+./deploy.sh prod apply v2.0.0
+```
+
+### Application Deployment
+```bash
+# Build and push Docker image with latest tag
+cd laravel-api
+./build-and-push.sh
+
+# Build and push with specific tag
+./build-and-push.sh v1.2.3
+./build-and-push.sh dev-feature-123
+./build-and-push.sh staging-456
+
+# Update ECS service with new image
+aws ecs update-service \
+  --cluster laravel-api-dev-cluster \
+  --service laravel-api-dev-service \
+  --force-new-deployment
+```
+
+### Image Tag Management
+```bash
+# List available images
+aws ecr list-images --repository-name laravel-api --region us-east-1
+
+# Deploy specific image tag
+terraform apply -var="image_tag=v1.2.3"
 ```
 
 ## Environment Configuration
