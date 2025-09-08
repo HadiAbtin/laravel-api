@@ -1,0 +1,7 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+rm -r --cached terraform-aws-laravel/.terraform/.tfvars.example
+.terraform.lock.hcl
