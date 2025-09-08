@@ -16,6 +16,8 @@ This project provides a complete solution for deploying a Laravel API across mul
 - ✅ **CloudFront** CDN for global performance
 - ✅ **Secrets Management** with AWS Secrets Manager
 - ✅ **Image Tag Management** per environment
+- ✅ **Custom Domain Support** with Cloudflare DNS
+- ✅ **SSL/TLS** automatic encryption
 - ✅ **Monitoring** with CloudWatch
 - ✅ **Security** best practices
 
@@ -123,6 +125,25 @@ cd ../terraform-aws-laravel
 curl https://<cloudfront-url>/api/ping
 ```
 
+### **5. Setup Custom Domain (Optional):**
+```bash
+# Get ALB URL for custom domain setup
+./deploy.sh dev output | grep alb_url
+
+# Example: http://laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com
+```
+
+**Configure Cloudflare DNS:**
+1. Login to Cloudflare Dashboard
+2. Create CNAME record:
+   ```
+   Type: CNAME
+   Name: laravel-api-dev
+   Target: laravel-api-dev-alb-1234567890.us-east-1.elb.amazonaws.com
+   Proxy: ✅ Enabled (Orange Cloud)
+   ```
+3. Access your service at: `https://laravel-api-dev.vboom.io`
+
 ## 📚 **Documentation**
 
 ### **Application Documentation:**
@@ -144,6 +165,7 @@ curl https://<cloudfront-url>/api/ping
 - **Resources**: Minimal (t3.micro instances)
 - **Auto-scaling**: 1-3 tasks
 - **Image Tag**: `latest` (configurable)
+- **Custom Domain**: `https://laravel-api-dev.vboom.io`
 - **Cost**: ~$25/week
 - **Deployment**: `./deploy.sh dev apply [tag]`
 
@@ -152,6 +174,7 @@ curl https://<cloudfront-url>/api/ping
 - **Resources**: Same as production
 - **Auto-scaling**: 1-3 tasks
 - **Image Tag**: `latest` (configurable)
+- **Custom Domain**: `https://laravel-api-staging.vboom.io`
 - **Cost**: ~$25/week
 - **Deployment**: `./deploy.sh staging apply [tag]`
 
@@ -160,6 +183,7 @@ curl https://<cloudfront-url>/api/ping
 - **Resources**: Production-grade
 - **Auto-scaling**: 1-10 tasks
 - **Image Tag**: `latest` (configurable)
+- **Custom Domain**: `https://laravel-api.vboom.io`
 - **Cost**: ~$25/week
 - **Deployment**: `./deploy.sh prod apply [tag]`
 
@@ -235,6 +259,8 @@ cd ../terraform-aws-laravel
 - Secrets Manager for credentials
 - IAM roles with least privilege
 - HTTPS-only communication
+- Cloudflare DDoS protection
+- SSL/TLS automatic encryption
 
 ### **Application Security:**
 - OAuth2 authentication
