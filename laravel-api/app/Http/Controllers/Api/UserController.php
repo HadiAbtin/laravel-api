@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -170,8 +172,8 @@ class UserController extends Controller
                 'environment' => app()->environment(),
                 'app_name' => config('app.name'),
                 'app_url' => config('app.url'),
-                'database_connected' => \DB::connection()->getPdo() ? true : false,
-                'redis_connected' => \Redis::ping() === '+PONG',
+                'database_connected' => DB::connection()->getPdo() ? true : false,
+                'redis_connected' => Redis::ping() === '+PONG',
                 'cache_driver' => config('cache.default'),
                 'queue_driver' => config('queue.default'),
                 'session_driver' => config('session.driver'),
