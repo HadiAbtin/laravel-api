@@ -1,0 +1,233 @@
+name: Laravel API CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+  pull_request:
+    branches:
+      - main
+      - develop
+      - staging
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 897722705454
+  PROJECT_NAME: laravel-api
+  ECR_REPOSITORY: laravel-api
+
+jobs:
+  # Build and Test Job
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: mbstring, dom, fileinfo, mysql, redis
+        coverage: xdebug
+
+    - name: Install Composer dependencies
+      run: |
+        cd laravel-api
+        composer install --no-progress --prefer-dist --optimize-autoloader
+
+    - name: Run PHP tests
+      run: |
+        cd laravel-api
+        composer test
+
+    - name: Run static analysis
+      run: |
+        cd laravel-api
+        composer analyse
+
+  # Build Docker Image Job
+  build-docker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: ./laravel-api
+        platforms: linux/amd64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deploy to Development
+  deploy-dev:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Deploy to Development
+      run: |
+        cd terraform-aws-laravel/environments/dev
+        terraform init
+        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+
+    - name: Update ECS Service
+      run: |
+        aws ecs update-service \
+          --cluster laravel-api-dev-cluster \
+          --service laravel-api-dev-service \
+          --force-new-deployment \
+          --region ${{ env.AWS_REGION }}
+
+  # Deploy to Staging
+  deploy-staging:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Deploy to Staging
+      run: |
+        cd terraform-aws-laravel/environments/staging
+        terraform init
+        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+
+    - name: Update ECS Service
+      run: |
+        aws ecs update-service \
+          --cluster laravel-api-staging-cluster \
+          --service laravel-api-staging-service \
+          --force-new-deployment \
+          --region ${{ env.AWS_REGION }}
+
+  # Deploy to Production
+  deploy-prod:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Deploy to Production
+      run: |
+        cd terraform-aws-laravel/environments/prod
+        terraform init
+        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+
+    - name: Update ECS Service
+      run: |
+        aws ecs update-service \
+          --cluster laravel-api-prod-cluster \
+          --service laravel-api-prod-service \
+          --force-new-deployment \
+          --region ${{ env.AWS_REGION }}
+
+  # Health Check
+  health-check:
+    needs: [deploy-dev, deploy-staging, deploy-prod]
+    runs-on: ubuntu-latest
+    if: always() && (needs.deploy-dev.result == 'success' || needs.deploy-staging.result == 'success' || needs.deploy-prod.result == 'success')
+    
+    steps:
+    - name: Health Check Development
+      if: needs.deploy-dev.result == 'success'
+      run: |
+        echo "Checking development environment..."
+        # Add health check logic here
+        echo "Development environment is healthy!"
+
+    - name: Health Check Staging
+      if: needs.deploy-staging.result == 'success'
+      run: |
+        echo "Checking staging environment..."
+        # Add health check logic here
+        echo "Staging environment is healthy!"
+
+    - name: Health Check Production
+      if: needs.deploy-prod.result == 'success'
+      run: |
+        echo "Checking production environment..."
+        # Add health check logic here
+        echo "Production environment is healthy!"
