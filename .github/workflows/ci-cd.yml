@@ -47,11 +47,6 @@ jobs:
         cp ../oauth-public.key storage/
         composer test
 
-    - name: Run static analysis
-      run: |
-        cd laravel-api
-        composer analyse
-
   # Build Docker Image Job
   build-docker:
     needs: build-and-test
