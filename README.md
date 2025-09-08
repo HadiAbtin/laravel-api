@@ -102,13 +102,8 @@ Check which environment you're accessing:
     "environment": "dev",
     "app_name": "Laravel",
     "app_url": "https://d2kkrofizwzdxb.cloudfront.net",
-    "database_connected": true,
-    "redis_connected": false,
-    "cache_driver": "redis",
-    "queue_driver": "redis",
-    "session_driver": "redis",
     "version": "1.0.0-dev-test",
-    "timestamp": "2025-09-08T22:23:54.383914Z"
+    "timestamp": "2025-09-08T22:50:04.486501Z"
   }
 }
 ```
@@ -252,7 +247,7 @@ GET /api/ping
 
 # Environment Info
 GET /api/users/env-info
-# Response: Environment details, DB/Redis status, config info
+# Response: Environment details (environment, app_name, app_url, version)
 
 # User Statistics
 GET /api/users/stats
@@ -449,7 +444,7 @@ curl -s https://laravel-api-dev.vboom.io/api/users/env-info | jq '.'
 
 ### **Expected Responses:**
 - **Ping**: `"OK"`
-- **Environment Info**: JSON with environment details
+- **Environment Info**: JSON with environment details (environment, app_name, app_url, version)
 - **Users**: `401 Unauthorized` (expected without auth)
 
 ## 🚨 **Troubleshooting**
@@ -459,7 +454,6 @@ curl -s https://laravel-api-dev.vboom.io/api/users/env-info | jq '.'
 2. **Database Connection**: Verify security groups
 3. **ALB Health Checks**: Check target group health
 4. **Docker Build Failures**: Check Dockerfile syntax
-5. **Redis Connection**: Check ElastiCache security groups
 
 ### **Debug Commands:**
 ```bash
