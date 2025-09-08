@@ -123,6 +123,12 @@ variable "ecs_cpu_target_value" {
   default     = 70.0
 }
 
+variable "ecs_memory_target_value" {
+  description = "Target memory utilization percentage for auto scaling"
+  type        = number
+  default     = 80.0
+}
+
 # Secrets Configuration
 variable "db_password_secret_name" {
   description = "Name of the database password secret in Secrets Manager"
