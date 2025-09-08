@@ -111,16 +111,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.6.0
-
     - name: Deploy to Development
       run: |
-        cd terraform-aws-laravel/environments/dev
-        terraform init
-        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+        echo "Development deployment - Infrastructure should be managed separately"
 
     - name: Update ECS Service
       run: |
@@ -148,16 +141,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.6.0
-
     - name: Deploy to Staging
       run: |
-        cd terraform-aws-laravel/environments/staging
-        terraform init
-        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+        echo "Staging deployment - Infrastructure should be managed separately"
 
     - name: Update ECS Service
       run: |
@@ -185,16 +171,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.6.0
-
     - name: Deploy to Production
       run: |
-        cd terraform-aws-laravel/environments/prod
-        terraform init
-        terraform apply -auto-approve -var="image_tag=${{ needs.build-docker.outputs.image-tag }}"
+        echo "Production deployment - Infrastructure should be managed separately"
 
     - name: Update ECS Service
       run: |

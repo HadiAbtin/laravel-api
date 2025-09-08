@@ -1,7 +1,27 @@
 # Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-rm -r --cached terraform-aws-laravel/.terraform/.tfvars.example
-.terraform.lock.hcl
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+!**/*.tfvars.example
+**/.terraform.lock.hcl
+
+# Laravel
+laravel-api/.env
+laravel-api/vendor/
+laravel-api/node_modules/
+laravel-api/storage/logs/
+laravel-api/bootstrap/cache/
+
+# Docker
+**/docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
