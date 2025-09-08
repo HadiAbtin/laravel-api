@@ -74,12 +74,9 @@ module "redis" {
   redis_node_type = var.redis_node_type
 }
 
-# ECR Module
-module "ecr" {
-  source = "../../modules/ecr"
-
-  project_name = var.project_name
-  environment  = var.environment
+# ECR Repository URL (managed outside Terraform)
+locals {
+  ecr_repository_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}"
 }
 
 # Application Load Balancer Module
@@ -128,7 +125,7 @@ module "ecs" {
   ecs_security_group_id = module.vpc.ecs_security_group_id
 
   image_tag           = var.image_tag
-  ecr_repository_url  = module.ecr.repository_url
+  ecr_repository_url  = local.ecr_repository_url
   ecs_cpu           = var.ecs_cpu
   ecs_memory        = var.ecs_memory
 
