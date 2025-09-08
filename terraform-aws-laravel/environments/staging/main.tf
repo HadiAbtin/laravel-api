@@ -57,7 +57,7 @@ module "rds" {
   db_allocated_storage = var.db_allocated_storage
   db_name              = var.db_name
   db_username          = var.db_username
-  db_password          = module.ecs.db_password
+  db_password_secret_name = var.db_password_secret_name
 }
 
 # Redis Module
@@ -131,6 +131,10 @@ module "ecs" {
 
   rds_endpoint = module.rds.endpoint
   redis_endpoint = module.redis.endpoint
+
+  # Secrets Configuration
+  db_password_secret_name = var.db_password_secret_name
+  app_key_secret_name      = var.app_key_secret_name
 
   # Auto Scaling Configuration
   ecs_auto_scaling_max_capacity = var.ecs_auto_scaling_max_capacity

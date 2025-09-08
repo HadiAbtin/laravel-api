@@ -14,7 +14,7 @@ resource "aws_db_subnet_group" "main" {
 
 # Data source for existing Secrets Manager secret
 data "aws_secretsmanager_secret" "db_password" {
-  name = "${var.project_name}-${var.environment}-db-password"
+  name = var.db_password_secret_name
 }
 
 data "aws_secretsmanager_secret_version" "db_password" {

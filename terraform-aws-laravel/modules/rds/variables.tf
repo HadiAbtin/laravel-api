@@ -49,8 +49,13 @@ variable "db_username" {
   default     = "laravel"
 }
 
+variable "db_password_secret_name" {
+  description = "Name of the database password secret in Secrets Manager"
+  type        = string
+}
+
 variable "db_password" {
-  description = "Database password"
+  description = "Database password (deprecated - use db_password_secret_name)"
   type        = string
   default     = ""
   sensitive   = true

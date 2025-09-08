@@ -325,11 +325,11 @@ resource "aws_iam_role_policy" "ecs_task_secrets" {
 
 # Data source for existing Secrets Manager secrets
 data "aws_secretsmanager_secret" "db_password" {
-  name = "${var.project_name}-${var.environment}-db-password"
+  name = var.db_password_secret_name
 }
 
 data "aws_secretsmanager_secret" "app_key" {
-  name = "${var.project_name}-${var.environment}-app-key"
+  name = var.app_key_secret_name
 }
 
 # Data source for secret values

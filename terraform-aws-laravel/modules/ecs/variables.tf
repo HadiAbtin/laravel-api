@@ -124,4 +124,15 @@ variable "ecs_memory_target_value" {
   default     = 80.0
 }
 
-# Secrets are now auto-generated, no variables needed
+# Secrets Variables
+variable "db_password_secret_name" {
+  description = "Name of the database password secret in Secrets Manager"
+  type        = string
+}
+
+variable "app_key_secret_name" {
+  description = "Name of the application key secret in Secrets Manager"
+  type        = string
+}
+
+# Secrets are now external, variables needed for secret names
