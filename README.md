@@ -69,7 +69,7 @@ laravel-api/
 - **CloudFront**: Global CDN
 - **VPC**: Isolated network environment
 - **ECR**: Container registry (managed externally)
-- **Secrets Manager**: Secure credential storage
+- **Secrets Manager**: Secure credential storage (managed externally)
 - **CloudWatch**: Monitoring and logging
 
 ### **Application Stack:**
@@ -87,6 +87,52 @@ laravel-api/
 - Terraform installed
 - Docker installed
 - Git
+
+### **🔐 REQUIRED: Create Secrets First**
+Before deploying any environment, you **MUST** create secrets in AWS Secrets Manager:
+
+```bash
+# Development Environment
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-db-password-new" \
+  --secret-string "DevDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-dev-app-key-new" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+
+# Staging Environment
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-db-password" \
+  --secret-string "StagingDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-staging-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+
+# Production Environment
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-db-password" \
+  --secret-string "ProdDBPass123" \
+  --region us-east-1
+
+aws secretsmanager create-secret \
+  --name "laravel-api-prod-app-key" \
+  --secret-string "base64:$(openssl rand -base64 32)" \
+  --region us-east-1
+```
+
+### **🐳 REQUIRED: Create ECR Repository**
+Before building images, create ECR repository:
+
+```bash
+# Create ECR repository (if not exists)
+aws ecr create-repository --repository-name laravel-api --region us-east-1
+```
 
 ### **1. Clone Repository:**
 ```bash
@@ -250,6 +296,19 @@ cd ../terraform-aws-laravel
 # Deploy to production
 ./deploy.sh prod apply v1.2.3
 ```
+
+### **🔄 Image Tag Management:**
+- **Flexible Deployment**: Deploy any image tag to any environment
+- **Latest Tag**: Default for automatic deployments
+- **Version Tags**: Use semantic versioning (v1.2.3)
+- **Feature Tags**: Use descriptive names (feature-auth-improvements)
+- **Hotfix Tags**: Use hotfix prefix (hotfix-security-patch)
+
+### **🔐 Secrets Management:**
+- **External Management**: Secrets created outside Terraform
+- **Environment-Specific**: Each environment has its own secrets
+- **Secure Storage**: AWS Secrets Manager encryption
+- **Automatic Rotation**: Support for secret rotation
 
 ## 🔐 **Security Features**
 
