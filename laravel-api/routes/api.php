@@ -13,10 +13,22 @@ Route::get('test/version', 'Api\TestController@version');
 Route::group(['prefix' => 'users'], function () {
     Route::get('/', 'Api\UserController@index');
     Route::get('/stats', 'Api\UserController@stats');
+    Route::get('/env-info', 'Api\UserController@envInfo');
     Route::get('/{uuid}', 'Api\UserController@show');
     Route::post('/', 'Api\UserController@store');
     Route::put('/{uuid}', 'Api\UserController@update');
     Route::delete('/{uuid}', 'Api\UserController@destroy');
+});
+
+// Product Management API Routes (Latest Feature)
+Route::group(['prefix' => 'products'], function () {
+    Route::get('/', 'Api\ProductController@index');
+    Route::get('/stats', 'Api\ProductController@stats');
+    Route::get('/search', 'Api\ProductController@search');
+    Route::get('/{id}', 'Api\ProductController@show');
+    Route::post('/', 'Api\ProductController@store');
+    Route::put('/{id}', 'Api\ProductController@update');
+    Route::delete('/{id}', 'Api\ProductController@destroy');
 });
 
 // Workflow test routes
