@@ -19,6 +19,17 @@ Route::group(['prefix' => 'users'], function () {
     Route::delete('/{uuid}', 'Api\UserController@destroy');
 });
 
+// Product Management API Routes (Latest Feature)
+Route::group(['prefix' => 'products'], function () {
+    Route::get('/', 'Api\ProductController@index');
+    Route::get('/stats', 'Api\ProductController@stats');
+    Route::get('/search', 'Api\ProductController@search');
+    Route::get('/{id}', 'Api\ProductController@show');
+    Route::post('/', 'Api\ProductController@store');
+    Route::put('/{id}', 'Api\ProductController@update');
+    Route::delete('/{id}', 'Api\ProductController@destroy');
+});
+
 // Workflow test routes
 Route::get('workflow/test', 'Api\WorkflowTestController@test');
 Route::get('workflow/status', 'Api\WorkflowTestController@status');
