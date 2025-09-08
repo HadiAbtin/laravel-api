@@ -85,6 +85,8 @@ jobs:
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=develop,enable={{github.ref == 'refs/heads/develop'}}
+          type=raw,value=staging,enable={{github.ref == 'refs/heads/staging'}}
 
     - name: Build and push Docker image
       id: build
