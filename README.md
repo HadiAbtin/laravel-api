@@ -80,6 +80,39 @@ laravel-api/
 - **API Transformers**: Structured API responses
 - **Redis**: Caching and session storage
 
+## 🌐 **Live Deployment**
+
+### **Environment URLs:**
+- **Development**: [https://laravel-api-dev.vboom.io](https://laravel-api-dev.vboom.io)
+- **Staging**: [https://laravel-api-staging.vboom.io](https://laravel-api-staging.vboom.io)
+- **Production**: [https://laravel-api.vboom.io](https://laravel-api.vboom.io)
+
+### **Environment Info Endpoint:**
+Check which environment you're accessing:
+- **Dev**: [https://laravel-api-dev.vboom.io/api/users/env-info](https://laravel-api-dev.vboom.io/api/users/env-info)
+- **Staging**: [https://laravel-api-staging.vboom.io/api/users/env-info](https://laravel-api-staging.vboom.io/api/users/env-info)
+- **Production**: [https://laravel-api.vboom.io/api/users/env-info](https://laravel-api.vboom.io/api/users/env-info)
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "Environment info retrieved successfully",
+  "data": {
+    "environment": "dev",
+    "app_name": "Laravel",
+    "app_url": "https://d2kkrofizwzdxb.cloudfront.net",
+    "database_connected": true,
+    "redis_connected": false,
+    "cache_driver": "redis",
+    "queue_driver": "redis",
+    "session_driver": "redis",
+    "version": "1.0.0-dev-test",
+    "timestamp": "2025-09-08T22:23:54.383914Z"
+  }
+}
+```
+
 ## 🚀 **Quick Start**
 
 ### **Prerequisites:**
@@ -163,12 +196,17 @@ cd ../laravel-api
 
 ### **4. Test API:**
 ```bash
-# Get CloudFront URL
-cd ../terraform-aws-laravel
-./deploy.sh dev output | grep application_url
+# Test basic endpoints
+curl https://laravel-api-dev.vboom.io/api/ping
+curl https://laravel-api-dev.vboom.io/api/users/env-info
 
-# Test API endpoint
-curl https://<cloudfront-url>/api/ping
+# Test with authentication (requires valid token)
+curl -H "Authorization: Bearer YOUR_TOKEN" https://laravel-api-dev.vboom.io/api/users
+
+# Test all environments
+curl https://laravel-api-dev.vboom.io/api/users/env-info      # Development
+curl https://laravel-api-staging.vboom.io/api/users/env-info  # Staging
+curl https://laravel-api.vboom.io/api/users/env-info          # Production
 ```
 
 ### **5. Setup Custom Domain (Optional):**
@@ -203,6 +241,45 @@ curl https://<cloudfront-url>/api/ping
 - **[Multi-Environment Guide](terraform-aws-laravel/docs/MULTI_ENVIRONMENT_GUIDE.md)**: Environment management
 - **[Deployment Guide](terraform-aws-laravel/docs/DEPLOYMENT_GUIDE.md)**: Infrastructure deployment
 - **[Terraform README](terraform-aws-laravel/README.md)**: Infrastructure overview
+
+## 🔌 **API Reference**
+
+### **Public Endpoints:**
+```bash
+# Health Check
+GET /api/ping
+# Response: "OK"
+
+# Environment Info
+GET /api/users/env-info
+# Response: Environment details, DB/Redis status, config info
+
+# User Statistics
+GET /api/users/stats
+# Response: User counts and statistics
+```
+
+### **Protected Endpoints (Require Authentication):**
+```bash
+# User Management
+GET    /api/users              # List all users
+POST   /api/users              # Create new user
+GET    /api/users/{uuid}       # Get user by UUID
+PUT    /api/users/{uuid}       # Update user
+DELETE /api/users/{uuid}       # Delete user
+
+# Authentication
+POST   /api/register           # User registration
+POST   /api/passwords/reset    # Password reset request
+PUT    /api/passwords/reset    # Password reset confirmation
+```
+
+### **Authentication:**
+All protected endpoints require Bearer token:
+```bash
+curl -H "Authorization: Bearer YOUR_OAUTH_TOKEN" \
+     https://laravel-api-dev.vboom.io/api/users
+```
 
 ## 🔧 **Environment Management**
 
@@ -357,6 +434,24 @@ cd ../terraform-aws-laravel
 - **Production**: ~$25/week
 - **Total**: ~$75/week (~$325/month)
 
+## 🔍 **Status Check**
+
+### **Quick Health Check:**
+```bash
+# Check all environments
+curl -s https://laravel-api-dev.vboom.io/api/ping
+curl -s https://laravel-api-staging.vboom.io/api/ping
+curl -s https://laravel-api.vboom.io/api/ping
+
+# Detailed environment info
+curl -s https://laravel-api-dev.vboom.io/api/users/env-info | jq '.'
+```
+
+### **Expected Responses:**
+- **Ping**: `"OK"`
+- **Environment Info**: JSON with environment details
+- **Users**: `401 Unauthorized` (expected without auth)
+
 ## 🚨 **Troubleshooting**
 
 ### **Common Issues:**
@@ -364,6 +459,7 @@ cd ../terraform-aws-laravel
 2. **Database Connection**: Verify security groups
 3. **ALB Health Checks**: Check target group health
 4. **Docker Build Failures**: Check Dockerfile syntax
+5. **Redis Connection**: Check ElastiCache security groups
 
 ### **Debug Commands:**
 ```bash
@@ -375,6 +471,9 @@ aws logs describe-log-streams --log-group-name /ecs/laravel-api-dev
 
 # Check ECS service
 aws ecs describe-services --cluster laravel-api-dev-cluster
+
+# Check environment info
+curl https://laravel-api-dev.vboom.io/api/users/env-info
 ```
 
 ## 🤝 **Contributing**
