@@ -129,7 +129,8 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop-${{ github.sha }}" \
+        # Use 'latest' tag for develop branch (professional approach)
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')
         
@@ -180,7 +181,8 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging-${{ github.sha }}" \
+        # Use 'latest' tag for staging branch (professional approach)
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')
         
@@ -231,7 +233,8 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:main-${{ github.sha }}" \
+        # Use 'latest' tag for main branch (professional approach)
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')
         
