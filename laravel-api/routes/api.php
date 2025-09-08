@@ -9,6 +9,16 @@ Route::get('test', 'Api\TestController@index');
 Route::get('test/health', 'Api\TestController@health');
 Route::get('test/version', 'Api\TestController@version');
 
+// User Management API Routes (New Feature)
+Route::group(['prefix' => 'users'], function () {
+    Route::get('/', 'Api\UserController@index');
+    Route::get('/stats', 'Api\UserController@stats');
+    Route::get('/{uuid}', 'Api\UserController@show');
+    Route::post('/', 'Api\UserController@store');
+    Route::put('/{uuid}', 'Api\UserController@update');
+    Route::delete('/{uuid}', 'Api\UserController@destroy');
+});
+
 // Workflow test routes
 Route::get('workflow/test', 'Api\WorkflowTestController@test');
 Route::get('workflow/status', 'Api\WorkflowTestController@status');
