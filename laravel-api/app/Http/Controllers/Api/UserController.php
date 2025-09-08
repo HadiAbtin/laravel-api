@@ -49,8 +49,10 @@ class UserController extends Controller
     /**
      * Get user by ID
      */
-    public function show(int $id): JsonResponse
+    public function show($id): JsonResponse
     {
+        // Convert string to int if needed
+        $id = (int) $id;
         $users = [
             1 => [
                 'id' => 1,
@@ -137,8 +139,10 @@ class UserController extends Controller
     /**
      * Update user
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
+        // Convert string to int if needed
+        $id = (int) $id;
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email',
@@ -165,8 +169,10 @@ class UserController extends Controller
     /**
      * Delete user
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy($id): JsonResponse
     {
+        // Convert string to int if needed
+        $id = (int) $id;
         // Simulate user deletion
         return response()->json([
             'success' => true,
