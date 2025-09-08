@@ -100,15 +100,17 @@ jobs:
       run: |
         # Get the image digest from the build step
         IMAGE_DIGEST=$(echo "${{ steps.build.outputs.digest }}" | cut -d':' -f2)
-        IMAGE_URI="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}@${IMAGE_DIGEST}"
         
-        # Tag and push based on branch
+        # Tag and push based on branch using docker tag and push
         if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag develop
+          docker tag "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}@${IMAGE_DIGEST}" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop"
+          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop"
         elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
-          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag staging
+          docker tag "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}@${IMAGE_DIGEST}" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging"
+          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging"
         elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          aws ecr put-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-manifest "$(aws ecr batch-get-image --repository-name ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} --image-ids imageDigest=${IMAGE_DIGEST} --query 'images[0].imageManifest' --output text)" --image-tag latest
+          docker tag "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}@${IMAGE_DIGEST}" "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
+          docker push "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"
         fi
 
   # Deploy to Development
