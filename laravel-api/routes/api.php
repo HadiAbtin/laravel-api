@@ -13,10 +13,10 @@ Route::get('test/version', 'Api\TestController@version');
 Route::group(['prefix' => 'users'], function () {
     Route::get('/', 'Api\UserController@index');
     Route::get('/stats', 'Api\UserController@stats');
-    Route::get('/{id}', 'Api\UserController@show');
+    Route::get('/{uuid}', 'Api\UserController@show');
     Route::post('/', 'Api\UserController@store');
-    Route::put('/{id}', 'Api\UserController@update');
-    Route::delete('/{id}', 'Api\UserController@destroy');
+    Route::put('/{uuid}', 'Api\UserController@update');
+    Route::delete('/{uuid}', 'Api\UserController@destroy');
 });
 
 // Workflow test routes

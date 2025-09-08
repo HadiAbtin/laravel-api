@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -13,86 +16,25 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'email' => 'john@example.com',
-                'role' => 'admin',
-                'created_at' => '2024-01-15T10:30:00Z'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Jane Smith',
-                'email' => 'jane@example.com',
-                'role' => 'user',
-                'created_at' => '2024-01-16T14:20:00Z'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Bob Johnson',
-                'email' => 'bob@example.com',
-                'role' => 'moderator',
-                'created_at' => '2024-01-17T09:15:00Z'
-            ]
-        ];
-
+        $users = User::with('roles')->get();
+        
         return response()->json([
             'success' => true,
             'message' => 'Users retrieved successfully',
             'data' => $users,
-            'total' => count($users),
+            'total' => $users->count(),
             'timestamp' => now()->toISOString()
         ]);
     }
 
     /**
-     * Get user by ID
+     * Get user by UUID
      */
-    public function show($id): JsonResponse
+    public function show($uuid): JsonResponse
     {
-        // Convert string to int if needed
-        $id = (int) $id;
-        $users = [
-            1 => [
-                'id' => 1,
-                'name' => 'John Doe',
-                'email' => 'john@example.com',
-                'role' => 'admin',
-                'profile' => [
-                    'bio' => 'System Administrator',
-                    'avatar' => 'https://via.placeholder.com/150',
-                    'last_login' => '2024-01-20T08:45:00Z'
-                ],
-                'created_at' => '2024-01-15T10:30:00Z'
-            ],
-            2 => [
-                'id' => 2,
-                'name' => 'Jane Smith',
-                'email' => 'jane@example.com',
-                'role' => 'user',
-                'profile' => [
-                    'bio' => 'Regular User',
-                    'avatar' => 'https://via.placeholder.com/150',
-                    'last_login' => '2024-01-19T16:20:00Z'
-                ],
-                'created_at' => '2024-01-16T14:20:00Z'
-            ],
-            3 => [
-                'id' => 3,
-                'name' => 'Bob Johnson',
-                'email' => 'bob@example.com',
-                'role' => 'moderator',
-                'profile' => [
-                    'bio' => 'Content Moderator',
-                    'avatar' => 'https://via.placeholder.com/150',
-                    'last_login' => '2024-01-18T11:30:00Z'
-                ],
-                'created_at' => '2024-01-17T09:15:00Z'
-            ]
-        ];
-
-        if (!isset($users[$id])) {
+        $user = User::where('uuid', $uuid)->with('roles')->first();
+        
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -103,7 +45,7 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User retrieved successfully',
-            'data' => $users[$id],
+            'data' => $user,
             'timestamp' => now()->toISOString()
         ]);
     }
@@ -116,22 +58,23 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:admin,user,moderator'
+            'password' => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string|min:8'
         ]);
 
-        // Simulate user creation
-        $newUser = [
-            'id' => rand(100, 999),
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'role' => $validated['role'],
-            'created_at' => now()->toISOString()
-        ];
+            'password' => Hash::make($validated['password']),
+            'uuid' => Str::uuid(),
+        ]);
+
+        $user->load('roles');
 
         return response()->json([
             'success' => true,
             'message' => 'User created successfully',
-            'data' => $newUser,
+            'data' => $user,
             'timestamp' => now()->toISOString()
         ], 201);
     }
@@ -139,29 +82,30 @@ class UserController extends Controller
     /**
      * Update user
      */
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, $uuid): JsonResponse
     {
-        // Convert string to int if needed
-        $id = (int) $id;
+        $user = User::where('uuid', $uuid)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+                'error' => 'USER_NOT_FOUND'
+            ], 404);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email',
-            'role' => 'sometimes|in:admin,user,moderator'
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
         ]);
 
-        // Simulate user update
-        $updatedUser = [
-            'id' => $id,
-            'name' => $validated['name'] ?? 'Updated User',
-            'email' => $validated['email'] ?? 'updated@example.com',
-            'role' => $validated['role'] ?? 'user',
-            'updated_at' => now()->toISOString()
-        ];
+        $user->update($validated);
+        $user->load('roles');
 
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully',
-            'data' => $updatedUser,
+            'data' => $user,
             'timestamp' => now()->toISOString()
         ]);
     }
@@ -169,17 +113,21 @@ class UserController extends Controller
     /**
      * Delete user
      */
-    public function destroy($id): JsonResponse
+    public function destroy($uuid): JsonResponse
     {
-        // Convert string to int if needed
-        $id = (int) $id;
-        // Simulate user deletion
-        return response()->json([
-            'success' => true,
-            'message' => 'User deleted successfully',
-            'data' => ['id' => $id],
-            'timestamp' => now()->toISOString()
-        ]);
+        $user = User::where('uuid', $uuid)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+                'error' => 'USER_NOT_FOUND'
+            ], 404);
+        }
+
+        $user->delete();
+
+        return response()->json(null, 204);
     }
 
     /**
@@ -188,13 +136,18 @@ class UserController extends Controller
     public function stats(): JsonResponse
     {
         $stats = [
-            'total_users' => 3,
-            'active_users' => 2,
-            'admins' => 1,
-            'moderators' => 1,
-            'regular_users' => 1,
-            'last_30_days_registrations' => 2,
-            'average_session_duration' => '2h 15m'
+            'total_users' => User::count(),
+            'active_users' => User::where('email_verified_at', '!=', null)->count(),
+            'admins' => User::whereHas('roles', function($q) {
+                $q->where('name', 'admin');
+            })->count(),
+            'moderators' => User::whereHas('roles', function($q) {
+                $q->where('name', 'moderator');
+            })->count(),
+            'regular_users' => User::whereHas('roles', function($q) {
+                $q->where('name', 'user');
+            })->count(),
+            'last_30_days_registrations' => User::where('created_at', '>=', now()->subDays(30))->count(),
         ];
 
         return response()->json([
