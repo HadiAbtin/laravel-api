@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('ping', 'Api\PingController@index');
 
+// Test routes for CI/CD verification
+Route::get('test', 'Api\TestController@index');
+Route::get('test/health', 'Api\TestController@health');
+Route::get('test/version', 'Api\TestController@version');
+
 Route::get('assets/{uuid}/render', 'Api\Assets\RenderFileController@show');
 
 // Performance Test Routes (Public for testing)
