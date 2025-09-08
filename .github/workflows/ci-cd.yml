@@ -42,6 +42,7 @@ jobs:
     - name: Run PHP tests
       run: |
         cd laravel-api
+        cp ../phpunit.xml .
         composer test
 
     - name: Run static analysis
