@@ -84,7 +84,9 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable=true
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=staging,enable={{is_default_branch == false && github.ref == 'refs/heads/staging'}}
+          type=raw,value=develop,enable={{is_default_branch == false && github.ref == 'refs/heads/develop'}}
 
     - name: Build and push Docker image
       id: build
@@ -129,8 +131,8 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        # Use 'latest' tag for develop branch (professional approach)
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
+        # Use 'develop' tag for develop branch
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:develop" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')
         
@@ -181,8 +183,8 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        # Use 'latest' tag for staging branch (professional approach)
-        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
+        # Use 'staging' tag for staging branch
+        NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:staging" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')
         
@@ -233,7 +235,7 @@ jobs:
           --query 'taskDefinition')
         
         # Update the image in task definition and remove unnecessary fields
-        # Use 'latest' tag for main branch (professional approach)
+        # Use 'latest' tag for main branch (production)
         NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" \
           'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy) | 
            .containerDefinitions[0].image = $IMAGE')

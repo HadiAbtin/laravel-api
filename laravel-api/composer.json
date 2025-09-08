@@ -1,5 +1,6 @@
 {
     "name": "joselfonseca/laravel-api",
+    "version": "1.0.0",
     "description": "Laravel API starter Kit will give you most of the boilerplate that you need for creating Laravel API's",
     "keywords": [
         "framework",
