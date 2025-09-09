@@ -13,6 +13,10 @@ laravel-api/node_modules/
 laravel-api/storage/logs/
 laravel-api/bootstrap/cache/
 
+# OAuth keys (managed via GitHub Secrets)
+oauth-private.key
+oauth-public.key
+
 # Docker
 **/docker-compose.override.yml
 

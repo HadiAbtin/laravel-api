@@ -39,12 +39,18 @@ jobs:
         cd laravel-api
         composer install --no-progress --prefer-dist --optimize-autoloader
 
+    - name: Setup OAuth Keys for Testing
+      run: |
+        cd laravel-api
+        echo "${{ secrets.OAUTH_PRIVATE_KEY }}" > storage/oauth-private.key
+        echo "${{ secrets.OAUTH_PUBLIC_KEY }}" > storage/oauth-public.key
+        chmod 600 storage/oauth-private.key
+        chmod 644 storage/oauth-public.key
+
     - name: Run PHP tests
       run: |
         cd laravel-api
         cp ../phpunit.xml .
-        cp ../oauth-private.key storage/
-        cp ../oauth-public.key storage/
         composer test
 
   # Build Docker Image Job
